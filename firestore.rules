@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: alerts
+    // Document ID: auto-generated
+    // Fields:
+    //   - vessel_id: string (required)
+    //   - vessel_name: string (required, max 100 chars)
+    //   - anomaly_score: number (required, 0-100)
+    //   - alert_level: string (required, enum: ['Normal', 'Monitor Carefully', 'ALERT Coast Guard'])
+    //   - triggered_rules: list (required, max 10 strings)
+    //   - timestamp: string (required, ISO 8601)
+    //   - location: map (required, lat/lon numbers)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isValidAlert(data) {
+      return data.keys().hasAll(['vessel_id', 'vessel_name', 'anomaly_score', 'alert_level', 'triggered_rules', 'timestamp', 'location']) &&
+             data.vessel_id is string && data.vessel_id.size() > 0 && data.vessel_id.size() < 50 &&
+             data.vessel_name is string && data.vessel_name.size() > 0 && data.vessel_name.size() < 100 &&
+             data.anomaly_score is number && data.anomaly_score >= 0 && data.anomaly_score <= 100 &&
+             data.alert_level in ['Normal', 'Monitor Carefully', 'ALERT Coast Guard'] &&
+             data.triggered_rules is list && data.triggered_rules.size() <= 10 &&
+             data.timestamp is string && data.timestamp.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$") &&
+             data.location is map && data.location.lat is number && data.location.lon is number;
+    }
+
+    match /alerts/{alertId} {
+      // Allow authenticated users to read alerts
+      allow read: if isAuthenticated();
+      // Allow creation of alerts if valid (typically from backend, but rules apply to all writes)
+      allow create: if isAuthenticated() && isValidAlert(request.resource.data);
+      // Alerts are immutable for this MVP
+      allow update, delete: if false;
+    }
+
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

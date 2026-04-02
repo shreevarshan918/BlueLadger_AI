@@ -1,0 +1,5 @@
+{
+  "name": "BlueLedgerAI",
+  "description": "Illegal fishing detection MVP using a 3-rule scoring system and Global Fishing Watch data.",
+  "requestFramePermissions": []
+}

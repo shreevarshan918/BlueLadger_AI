@@ -1,0 +1,32 @@
+{
+  "entities": {
+    "Alert": {
+      "title": "Alert",
+      "description": "An illegal fishing detection alert.",
+      "type": "object",
+      "properties": {
+        "vessel_id": { "type": "string", "description": "Unique identifier for the vessel." },
+        "vessel_name": { "type": "string", "description": "Name of the vessel." },
+        "anomaly_score": { "type": "integer", "description": "Calculated anomaly score (0-100)." },
+        "alert_level": { "type": "string", "description": "Alert level (Normal, Monitor, ALERT)." },
+        "triggered_rules": { "type": "array", "items": { "type": "string" }, "description": "List of rules triggered." },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Time the alert was generated." },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lon": { "type": "number" }
+          },
+          "required": ["lat", "lon"]
+        }
+      },
+      "required": ["vessel_id", "vessel_name", "anomaly_score", "alert_level", "triggered_rules", "timestamp", "location"]
+    }
+  },
+  "firestore": {
+    "/alerts/{alertId}": {
+      "schema": "Alert",
+      "description": "Collection of fishing alerts."
+    }
+  }
+}
